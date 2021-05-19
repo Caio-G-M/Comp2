@@ -1,21 +1,21 @@
 import java.util.Random;
 
-public class Pacotinho {
+public class Pacotinho<T extends Colecionavel> {
 
-    public Colecionavel[] colecionaveisDoPacote;
+    public T[] colecionaveisDoPacote;
 
     public Repositorio repositorio;
 
-    public Pacotinho(Repositorio repo, int[] posicoesDesejadas) {
+    public Pacotinho(Repositorio<T> repo, int[] posicoesDesejadas) {
         this.repositorio = repo;
         int colecionaveisPorPacote = 0;
         for (int i : posicoesDesejadas) {
             colecionaveisPorPacote++;
         }
-        Colecionavel[] array = new Colecionavel[colecionaveisPorPacote];
+        T[] array = (T[]) new Colecionavel[colecionaveisPorPacote];
         int contador = 0;
         for (int i : posicoesDesejadas) {
-            array[contador] = this.repositorio.getColecionavelDoRepositorio(i);
+            array[contador] = (T) this.repositorio.getColecionavelDoRepositorio(i);
             contador++;
         }
         this.colecionaveisDoPacote = array;
@@ -30,18 +30,18 @@ public class Pacotinho {
      */
     public Pacotinho(Repositorio repo, int quantColecionaveis) {
         this.repositorio = repo;
-        Colecionavel[] array = new Colecionavel[quantColecionaveis];
+        T[] array = (T[]) new Colecionavel[quantColecionaveis];
         int contador = 0;
 
         while (contador < quantColecionaveis) {
-            array[contador] = this.repositorio.getColecionavelDoRepositorio(new Random().nextInt(this.repositorio.getTotalColecionaveis() - 1) + 1);
+            array[contador] = (T) this.repositorio.getColecionavelDoRepositorio(new Random().nextInt(this.repositorio.getTotalColecionaveis() - 1) + 1);
             contador++;
         }
         this.colecionaveisDoPacote = array;
 
     }
 
-    public Colecionavel[] getColecionaveisDoPacote() {
+    public T[] getColecionaveisDoPacote() {
         return this.colecionaveisDoPacote;
     }
 }

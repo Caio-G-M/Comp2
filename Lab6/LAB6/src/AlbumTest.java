@@ -8,14 +8,18 @@ public class AlbumTest {
     private Repositorio repositorioColecionaveis;
     private static final int TAMANHO_DO_ALBUM = 200;
     private static final int ITENS_POR_PACOTE = 3;
+    Repositorio repositorioSelos;
+    Album albumSelo;
 
     @Before  // roda antes de cada teste
     public void setUp() {
-        this.repositorioColecionaveis = new Repositorio("album_copa2014", TAMANHO_DO_ALBUM);
-        this.albumColecionaveis = new Album(repositorioColecionaveis, ITENS_POR_PACOTE);
+        this.repositorioColecionaveis = new Repositorio<Figurinha>("album_copa2014", TAMANHO_DO_ALBUM, "Figurinha");
+        this.albumColecionaveis = new Album<Figurinha>(repositorioColecionaveis, ITENS_POR_PACOTE);
+        this.repositorioSelos = new Repositorio<>("Selos_de_paises", 200, "Selo");
+        this.albumSelo = new Album<>(repositorioSelos, ITENS_POR_PACOTE);
     }
     private void popularAlbum(int[] posicoesDesejadas) {
-        Pacotinho pacote = new Pacotinho(this.repositorioColecionaveis, posicoesDesejadas);
+        Pacotinho pacote = new Pacotinho<Figurinha>(this.repositorioColecionaveis, posicoesDesejadas);
         this.albumColecionaveis.receberNovoPacotinho(pacote);
     }
 
@@ -78,7 +82,7 @@ public class AlbumTest {
         int minimoColecionaveisColadosParaAutoCompletar =
                 (int) (TAMANHO_DO_ALBUM * Album.PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR / 100f);
         while (albumColecionaveis.getQuantItensColados() < minimoColecionaveisColadosParaAutoCompletar) {
-            Pacotinho novoPacotinho = new Pacotinho(
+            Pacotinho<Figurinha> novoPacotinho = new Pacotinho<>(
                     this.repositorioColecionaveis, ITENS_POR_PACOTE);  // aleatório
             albumColecionaveis.receberNovoPacotinho(novoPacotinho);
         }
@@ -105,5 +109,26 @@ public class AlbumTest {
         assertEquals("Pacotes de tamanho distinto do informado na construção " +
                         "do álbum devem ser rejeitados",
                 0, albumColecionaveis.getQuantItensColados());
+    }
+
+    @Test
+    public void testarDiferentesAlbunsComTiposDiferentes() {
+        popularAlbum(new int[] {1, 2, 3});
+
+        Pacotinho<Selo> pacoteSelos = new Pacotinho<>(this.repositorioSelos, new int[] {1, 2, 3});
+        this.albumSelo.receberNovoPacotinho(pacoteSelos);
+
+        for (int i = 1; i <= 3; i++) {
+            assertTrue("Colecionaveis já inseridos devem ser encontrados",
+                    this.albumColecionaveis.possuiItemColado(i));
+        }
+
+        for (int i = 1; i <= 3; i++) {
+            assertTrue("Colecionaveis já inseridos devem ser encontrados",
+                    this.albumSelo.possuiItemColado(i));
+        }
+
+
+
     }
 }

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Album {
+public class Album<T extends Colecionavel> {
 
     public static final int PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR = 90;
 
@@ -13,7 +13,7 @@ public class Album {
     private final Repositorio repositorio;
     private final int quantItensPorPacotinho;
 
-    private List<Colecionavel> colecionaveisColados;  // direct addressing
+    private List<T> colecionaveisColados;  // direct addressing
 
     private int quantColecionaveisColados;
 
@@ -21,7 +21,7 @@ public class Album {
     // mas vamos usar um HashMap aqui só para treinarmos
     private Map<Integer, Integer> contRepetidasByPosicao;
 
-    public Album(Repositorio repositorio, int quantItensPorPacotinho) {
+    public Album(Repositorio<T> repositorio, int quantItensPorPacotinho) {
         this.repositorio = repositorio;
         this.quantItensPorPacotinho = quantItensPorPacotinho;
 
@@ -36,15 +36,15 @@ public class Album {
         this.contRepetidasByPosicao = new HashMap<>();
     }
 
-    public void receberNovoPacotinho(Pacotinho pacotinho) {
-        Colecionavel[] colecionaveisDoPacotinho = pacotinho.getColecionaveisDoPacote();
+    public void receberNovoPacotinho(Pacotinho<T> pacotinho) {
+        T[] colecionaveisDoPacotinho = pacotinho.getColecionaveisDoPacote();
         if (colecionaveisDoPacotinho.length != this.quantItensPorPacotinho) {
 
             return;  // melhor ainda: lançaria uma checked exception
         }
 
 
-        for (Colecionavel col : pacotinho.getColecionaveisDoPacote()) {
+        for (T col : pacotinho.getColecionaveisDoPacote()) {
             final int posicao = col.getPosicao();
             if (possuiItemColado(posicao)) {
                 // adiciona como repetida
@@ -66,7 +66,7 @@ public class Album {
         }
     }
 
-    public Colecionavel getItemColado(int posicao) {
+    public T getItemColado(int posicao) {
         return this.colecionaveisColados.get(posicao);
     }
 
@@ -114,9 +114,11 @@ public class Album {
     }
 
     public void autoCompletar() {
-        if (getQuantColecionaveisColados() < getTamanho()*PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR / 100f) {
+        if (getQuantColecionaveisColados() <
+                getTamanho()*PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR / 100f) {
             return;
-        }else if (getQuantColecionaveisColados() >= getTamanho()*PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR / 100f) {
+        }else if (getQuantColecionaveisColados() >=
+                getTamanho()*PERCENTUAL_MINIMO_PARA_AUTO_COMPLETAR / 100f) {
             this.colecionaveisColados = this.repositorio.getTodosOsColecionaveis();
             this.quantColecionaveisColados = getTamanho();
         }
