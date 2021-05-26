@@ -76,6 +76,11 @@ public class TuiterLite {
      * @return A hashtag mais comum, ou null se nunca uma hashtag houver sido tuitada.
      */
     public String getHashtagMaisComum() {
+
+        if (this.ocorrenciasByHashtag.size() == 0) {
+            return null; //nao ha hashtags
+        }
+
         int maiorNumeroDeOcorrencias = 0;
         String hashtagMaisComum = new String();
         for (String hashtag : this.ocorrenciasByHashtag.keySet()) {
