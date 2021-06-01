@@ -79,7 +79,7 @@ public class TuiterLiteTest {
                 tuiterLite.tuitarAlgo(usuario, texto);
                 fail(); //Se nao houve exception, o teste deve falhar.
             } catch (TamanhoMaximoExcedidoException e) {
-                // ok, teste passa.
+                assertEquals("A exceção deve comunicar corretamente o tamanho do texto que se tentou tuitar", tamanho, e.getTamanhoTexto());
             }
         }
     }

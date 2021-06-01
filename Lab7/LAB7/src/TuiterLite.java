@@ -57,7 +57,7 @@ public class TuiterLite<T> {
         if (texto == null || usuario == null || texto.length() == 0) {
             throw new IllegalArgumentException();
         } else if (texto.length() > TAMANHO_MAXIMO_TUITES) {
-            throw new TamanhoMaximoExcedidoException();
+            throw new TamanhoMaximoExcedidoException(texto.length());
         } else if (!this.usuarioByEmail.containsKey(usuario.getEmail())) {
             throw new UsuarioDesconhecidoException();
         }
