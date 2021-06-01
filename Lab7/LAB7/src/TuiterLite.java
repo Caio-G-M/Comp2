@@ -9,86 +9,121 @@ import java.util.*;
  *  Os tuítes podem conter, além da mensagem de texto, um anexo qualquer.
  *  Há um método para retornar, a qualquer momento, qual a hashtag mais usada em toda a história do sistema.
  */
-public class TuiterLite {
+public class TuiterLite<T> {
 
     public static int TAMANHO_MAXIMO_TUITES = 120;
-    List<Usuario> listaDeUsuarios;
-    HashMap<String, Integer> ocorrenciasByHashtag;
+
+    private Map<String, Usuario> usuarioByEmail;
+
+    private Map<String, Integer> contadorByHashtag;
+    private String hashtagMaisComum;
+    private int contadorDaHashtagMaisComum;
 
     public TuiterLite() {
-        this.listaDeUsuarios = new ArrayList<>();
-        this.ocorrenciasByHashtag = new HashMap<>();
+        this.usuarioByEmail = new HashMap<>();
+        this.contadorByHashtag = new HashMap<>();
+        this.hashtagMaisComum = null;
+        this.contadorDaHashtagMaisComum = 0;
     }
-
 
     /**
      * Cadastra um usuário, retornando o novo objeto Usuario criado.
-     *
-     * @param nome  O nome do usuário.
+     * @param nome O nome do usuário.
      * @param email O e-mail do usuário (precisa ser único no sistema).
      * @return O Usuario criado.
      */
     public Usuario cadastrarUsuario(String nome, String email) {  // throws UsuarioJaExisteException {
-        Usuario usuarioNovo = new Usuario(nome, email);
-        this.listaDeUsuarios.add(usuarioNovo);
-        return usuarioNovo;
+        Usuario usuarioPreExistente = this.usuarioByEmail.get(email);
+        if (usuarioPreExistente != null) {
+            return usuarioPreExistente;
+        }
+
+        Usuario novoUsuario = new Usuario(nome, email);
+        this.usuarioByEmail.put(email, novoUsuario);
+
+        return novoUsuario;
     }
 
     /**
-     * @param usuario O autor do tuíte
-     * @param texto   O texto desejado
+     *
+     * @param usuario O autor do tuíte (não deve ser nulo)
+     * @param texto O texto desejado (nunca nulo)
      * @return Um "tuíte", que será devidamente publicado no sistema
-     * <p>
+     *
      * PS.: Se o texto exceder o limite pré-definido, ou o usuário não estiver cadastrado, return null
      */
-    public Tuite tuitarAlgo(Usuario usuario, String texto) {
-        if (texto.length() > TAMANHO_MAXIMO_TUITES) {
-            return null;
-        } else if (!(this.listaDeUsuarios.contains(usuario))) {
-            return null;
+    public Tuite<T> tuitarAlgo(Usuario usuario, String texto) throws UsuarioDesconhecidoException, TamanhoMaximoExcedidoException {
+
+        if (texto == null || usuario == null || texto.length() == 0) {
+            throw new IllegalArgumentException();
+        } else if (texto.length() > TAMANHO_MAXIMO_TUITES) {
+            throw new TamanhoMaximoExcedidoException();
+        } else if (!this.usuarioByEmail.containsKey(usuario.getEmail())) {
+            throw new UsuarioDesconhecidoException();
         }
 
-        Set<String> hashtagsNoTuite = new HashSet<>();
-        String[] tuiteSeparadoEmPalavras = texto.split("([^(a-z|A-Z|0-9|ã-ü|Ã-Ü|#)])+");
-        for (String palavra : tuiteSeparadoEmPalavras) {
-            if (palavra.charAt(0) == '#') {
-                palavra.replaceAll("#+", "");
-                hashtagsNoTuite.add(palavra);
-                if (!(this.ocorrenciasByHashtag.containsKey(palavra))) {
-                    this.ocorrenciasByHashtag.put(palavra, 1);
-                } else {
-                    int i = this.ocorrenciasByHashtag.get(palavra);
-                    this.ocorrenciasByHashtag.put(palavra, i + 1);
-                }
+        //if ( ) {
+        //    return null;
+        //}
+
+        Set<String> hashtags = obterHashtags(texto);
+        Tuite<T> tuite = new Tuite<>(usuario, texto, hashtags);
+
+        // atualiza os contadores de hashtags do sistema
+        for (String hashtag : hashtags) {
+            int contadorAtual = this.contadorByHashtag.getOrDefault(hashtag, 0);
+            int novoContador = contadorAtual + 1;
+            this.contadorByHashtag.put(hashtag, novoContador);
+
+            if (novoContador > this.contadorDaHashtagMaisComum) {
+                this.hashtagMaisComum = hashtag;
+                this.contadorDaHashtagMaisComum = novoContador;
             }
         }
 
-        Tuite tuite = new Tuite(usuario, texto, hashtagsNoTuite);
-
         return tuite;
-
     }
 
     /**
      * Retorna a hashtag mais comum dentre todas as que já apareceram.
      * A cada tuíte criado, hashtags devem ser detectadas automaticamente para que este método possa funcionar.
-     *
      * @return A hashtag mais comum, ou null se nunca uma hashtag houver sido tuitada.
      */
     public String getHashtagMaisComum() {
+        return this.hashtagMaisComum;
+    }
 
-        if (this.ocorrenciasByHashtag.size() == 0) {
-            return null; //nao ha hashtags
-        }
+    private Set<String> obterHashtags(String texto) {
 
-        int maiorNumeroDeOcorrencias = 0;
-        String hashtagMaisComum = new String();
-        for (String hashtag : this.ocorrenciasByHashtag.keySet()) {
-            if (this.ocorrenciasByHashtag.get(hashtag) > maiorNumeroDeOcorrencias) {
-                maiorNumeroDeOcorrencias = this.ocorrenciasByHashtag.get(hashtag);
-                hashtagMaisComum = hashtag;
+        Set<String> hashtags = null;
+
+        String[] palavrasDaFrase = texto.split("([^(a-z|A-Z|0-9|ã-ü|#)])+");   // "escapando" a contrabarra para que minha string seja "CONTRABARRA S"
+
+        for (String palavra : palavrasDaFrase) {
+
+            if (palavra.charAt(0) == '#') {
+                palavra = palavra.replaceAll("#+", "#");
+
+                String[] tags = palavra.split("#");
+                for (String tag : tags) {
+                    if (tag.length() > 0) {
+
+                        if (hashtags == null) {  // lazy instantiation
+                            hashtags = new HashSet<>();
+                        }
+                        hashtags.add("#" + tag);
+                    }
+                }
             }
         }
-        return hashtagMaisComum;
+
+        return hashtags == null ? Collections.emptySet() : hashtags;
     }
+
+    private static boolean isAlphanumeric(char c) {
+        return Character.isAlphabetic(c) || Character.isDigit(c);
+    }
+
+
+
 }
